@@ -1,23 +1,22 @@
 const express = require('express');
-
-const db = require('./data/dbConfig.js');
-
 const router = express.Router();
+
+const db = require('../data/dbConfig.js');
+
+
 
 router.use(express.json);
 
 
 // route handlers =>
-
-
 router.get("/",  (req, res) => {
     //  list of accounts 
     // Select from accounts using the database 
-    db.select('*').from('accounts')
+    db('accounts')
     //  all database operations returns a promise you
    // => need the following 
-    .then(rows => {
-        res.status(200).json(rows);
+    .then(account => {
+        res.status(200).json(account);
     })
     .catch(error => {
         console.log(error);
@@ -30,15 +29,14 @@ router.get('/:id', (req, res) => {
     // an account by id 
     // select * from account where id = :id
     const { id } = req.params
-    db('*').from("accounts").where({ id: req.params.id})
-    .first() // grab the first item in the returned array
-    .then(rows => {
-        res.status(200).json(rows[0]);
+    db.get(id)
+    .then(account => {
+        res.status(200).json(account[0]);
     })
     .catch(error => {
         console.log(error);
-        res.status(500).json({ error: ' failed to get accounts'})
-    })
+        res.status(500).json({ error: ' failed to retrieve accounts'})
+    });
 });
 
 router.post('/', validateAcctPost, (req, res) => {
@@ -59,9 +57,8 @@ db('accounts')
 router.put('/:id', (req, res) => {
 // update the post 
 const { id } = req.params.id
-const changes = req.body
 db('accounts') //working with this table => below are the functions i want to perform 
-.where({ id: req.params.id}) // remember to filiter or all records will be deleted (BAD PANDA)
+.where({ id }) // remember to filiter or all records will be deleted (BAD PANDA)
 .update(req.body)
 .then(count => {
     res.status(200).json(count);
@@ -74,12 +71,12 @@ res.status(500).json({ error: ' failed to update the account'})
 
 router.delete('/:id', (req, res) => {
     // removes the post
-    const id = req.params.id;
-    db.select('*').from('accounts')
+    const id = req.params;
+    db('accounts')
     .where({ id }) 
     .del()
-    .then(count => {
-        res.status(200).json(count);
+    .then(deleted => {
+        res.status(200).json(deleted);
     })
     .catch(error => {
         console.log(error);
